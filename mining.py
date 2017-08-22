@@ -7,8 +7,11 @@ XMR_PER_MONTH_PER_PERSON_STD = 0.02 # guessing
 # also guesses
 DAILY_MINER_GROWTH_MEAN = 1
 DAILY_MINER_GROWTH_STD = 2
-XMR_DAILY_PRICE_CHANGE_MEAN = 0
-XMR_DAILY_PRICE_CHANGE_STD = 2 # volatility
+XMR_DAILY_PRICE_CHANGE_MEAN = 0.01
+XMR_DAILY_PRICE_CHANGE_STD = 0.1 # volatility
+
+# bittrex commission fee
+COMMISSION_FEE = 0.0025
 
 
 class Mining:
@@ -21,7 +24,8 @@ class Mining:
             loc=XMR_PER_MONTH_PER_PERSON_MEAN,
             scale=XMR_PER_MONTH_PER_PERSON_STD,
             size=self.n_miners)
-        return self.price * xmr.sum()
+        total = self.price * xmr.sum()
+        return total * (1 - COMMISSION_FEE)
 
     def update_price(self):
         """using a random walk model"""
