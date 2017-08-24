@@ -1,7 +1,15 @@
 import params
 import numpy as np
+from tqdm import tqdm
 from mining import Mining
+from datetime import datetime
+from concurrent.futures import ProcessPoolExecutor
 
+
+# assuming sample is evenly distributed throughout the year
+# though people accumulate over time
+N_DAYS = 365
+SIZE_PER_DAY = round(params.POP_SIZE/365)
 BAIL_RANGES, BAIL_PROBS = zip(*params.BAIL_DIST)
 DETENTION_RANGES, DETENTION_PROBS = zip(*params.PRETRIAL_DETENTION_DIST)
 
@@ -59,14 +67,11 @@ def generate_bail_sample():
     return sample
 
 
-if __name__ == '__main__':
-    # assuming sample is evenly distributed throughout the year
-    # though people accumulate over time
-    SIZE_PER_DAY = round(params.POP_SIZE/365)
-    N_DAYS = 365
-    BAIL_FUND = 0
-    RAISED = 0
-    RELEASED = 0
+def run_trial(seed):
+    np.random.seed(seed)
+    bail_fund = 0
+    raised = 0
+    released = 0
 
     mining = Mining()
     population = []
@@ -76,8 +81,8 @@ if __name__ == '__main__':
         # monthly
         if day % 30 == 0:
             mined = mining.mine()
-            BAIL_FUND += mined
-            RAISED += mined
+            bail_fund += mined
+            raised += mined
         mining.update_miners()
         mining.update_price()
 
@@ -102,29 +107,57 @@ if __name__ == '__main__':
             if case.duration <= 0:
                 # appeared at course
                 if np.random.random() > params.ADJUSTED_FTA:
-                    BAIL_FUND += case.amount
+                    bail_fund += case.amount
             else:
                 _awaiting_trial.append(case)
         awaiting_trial = _awaiting_trial
 
-        print('DAY', day)
-        print('  FUND: ${:.2f}'.format(BAIL_FUND))
-        print('  RELEASED:', RELEASED)
-        print('  MINERS:', mining.n_miners)
-        print('  XMR>USD: ${:.2f}'.format(mining.price))
+        # print('DAY', day)
+        # print('  FUND: ${:.2f}'.format(bail_fund))
+        # print('  RELEASED:', released)
+        # print('  MINERS:', mining.n_miners)
+        # print('  XMR>USD: ${:.2f}'.format(mining.price))
 
         # spend as much as we can
-        while BAIL_FUND > 0:
+        while bail_fund > 0 and population:
             # sorted according to selection criteria
             case = population[0]
-            if case.amount <= BAIL_FUND:
-                RELEASED += 1
-                BAIL_FUND -= case.amount
+            if case.amount <= bail_fund:
+                released += 1
+                bail_fund -= case.amount
                 population.pop(0)
                 awaiting_trial.append(case)
             else:
                 break
 
-print('TOTALS')
-print('  RAISED: ${:.2f}'.format(RAISED))
-print('  RELEASED:', RELEASED)
+    print('TOTALS')
+    print('  RAISED: ${:.2f}'.format(raised))
+    print('  RELEASED:', released)
+
+    return raised, released
+
+
+def parallel(fn, n, n_jobs=None):
+    with ProcessPoolExecutor(max_workers=n_jobs) as executor:
+        kwargs = {
+            'total': n,
+            'unit': 'i',
+            'unit_scale': True,
+            'leave': True
+        }
+
+        futures = executor.map(fn, [datetime.utcnow().timestamp() + i for i in range(n)])
+        for f in tqdm(futures, **kwargs):
+            yield f
+
+
+if __name__ == '__main__':
+    N_TRIALS = 100
+    raiseds, releaseds = [], []
+    for raised, released in parallel(run_trial, N_TRIALS):
+        raiseds.append(raised)
+        releaseds.append(released)
+
+    print('MEANS')
+    print('  RAISED: ${:.2f}'.format(sum(raiseds)/len(raiseds)))
+    print('  RELEASED: ${:.2f}'.format(sum(releaseds)/len(releaseds)))
