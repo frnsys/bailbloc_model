@@ -160,4 +160,4 @@ if __name__ == '__main__':
 
     print('MEANS')
     print('  RAISED: ${:.2f}'.format(sum(raiseds)/len(raiseds)))
-    print('  RELEASED: ${:.2f}'.format(sum(releaseds)/len(releaseds)))
+    print('  RELEASED: {:.2f}'.format(sum(releaseds)/len(releaseds)))
