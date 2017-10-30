@@ -1,3 +1,4 @@
+import json
 import params
 import numpy as np
 from tqdm import tqdm
@@ -66,7 +67,6 @@ def generate_bail_sample():
     sample = [Case(s, d) for s, d in zip(sample, durations)]
     return sample
 
-
 def run_trial(seed):
     np.random.seed(seed)
     bail_fund = 0
@@ -133,8 +133,9 @@ def run_trial(seed):
     print('TOTALS')
     print('  RAISED: ${:.2f}'.format(raised))
     print('  RELEASED:', released)
+    print('  MINERS:', mining.n_miners)
 
-    return raised, released
+    return raised, released, mining.n_miners
 
 
 def parallel(fn, n, n_jobs=None):
@@ -146,18 +147,28 @@ def parallel(fn, n, n_jobs=None):
             'leave': True
         }
 
-        futures = executor.map(fn, [datetime.utcnow().timestamp() + i for i in range(n)])
+        seeds = [int(datetime.utcnow().timestamp() + i) for i in range(n)]
+        futures = executor.map(fn, seeds)
         for f in tqdm(futures, **kwargs):
             yield f
 
 
 if __name__ == '__main__':
-    N_TRIALS = 100
-    raiseds, releaseds = [], []
-    for raised, released in parallel(run_trial, N_TRIALS):
+    N_TRIALS = 1000
+    raiseds, releaseds, n_miners = [], [], []
+    for raised, released, miners in parallel(run_trial, N_TRIALS):
         raiseds.append(raised)
         releaseds.append(released)
+        n_miners.append(miners)
 
     print('MEANS')
     print('  RAISED: ${:.2f}'.format(sum(raiseds)/len(raiseds)))
     print('  RELEASED: {:.2f}'.format(sum(releaseds)/len(releaseds)))
+    print('  MINERS: {:.2f}'.format(sum(n_miners)/len(n_miners)))
+
+    with open('results.json', 'w') as f:
+        json.dump({
+            'raised': raised,
+            'released': released,
+            'miners': n_miners
+        }, f)

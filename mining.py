@@ -11,13 +11,14 @@ class Mining:
         self.price = XMR_USD_START
         self.n_miners = 0
         self.params = {
-            'XMR_PER_MONTH_PER_PERSON_MEAN': np.random.beta(a=2, b=2),
-            'XMR_PER_MONTH_PER_PERSON_STD': np.random.beta(a=2, b=2),
-            'DAILY_MINER_GROWTH_MEAN': np.random.normal(loc=1, scale=5),
+            'XMR_PER_MONTH_PER_PERSON_MEAN': np.random.beta(a=1, b=3)/2,
+            'XMR_PER_MONTH_PER_PERSON_STD': np.random.beta(a=1, b=3),
+            'DAILY_MINER_GROWTH_MEAN': np.random.normal(loc=1, scale=1.5),
             'DAILY_MINER_GROWTH_STD': np.random.beta(a=2, b=2),
             'XMR_DAILY_PRICE_CHANGE_MEAN': np.random.normal(loc=0.01, scale=0.1),
             'XMR_DAILY_PRICE_CHANGE_STD': np.random.beta(a=2, b=2)/2,
         }
+        print(self.params)
 
     def mine(self):
         xmr = np.random.normal(
