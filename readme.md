@@ -2,6 +2,7 @@ A basic model to estimate the impact of Bail Bloc.
 
 This is a _very_ quick-and-dirty model; there was not enough available data for empirically-determining some parameters. I have tried to indicate when this is the case.
 
+NOTE: The JS version of the model is the canonical one and is what runs on the Bail Bloc site.
 
 ## References
 
