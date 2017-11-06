@@ -9,7 +9,7 @@ Assuming these RVs are independent.
 
 POP_SIZE = 52465
 
-# Assuming uniformally distributed within buckets
+# Assuming uniformly distributed within buckets
 # For NYC, Figure 9, p47. [1]
 # See also Appendix B
 BAIL_DIST = [
@@ -23,7 +23,7 @@ BAIL_DIST = [
     ((2501, 4999),   0.02),
     ((5000, 10000),  0.02),
 ]
-# NOTE: <1% is above $10,0000
+# NOTE: <1% is above $10,000
 
 # Table 7, p51, ibid
 # Note that this does not distinguish nonfelony from felony
